@@ -26,14 +26,14 @@
 
 import UIKit
 
-class ZLAnimationUtils: NSObject {
-    enum AnimationType: String {
+public class ZLAnimationUtils: NSObject {
+    public enum AnimationType: String {
         case fade = "opacity"
         case scale = "transform.scale"
         case rotate = "transform.rotation"
     }
     
-    class func animation(
+    public class func animation(
         type: ZLAnimationUtils.AnimationType,
         fromValue: CGFloat,
         toValue: CGFloat,
@@ -48,7 +48,7 @@ class ZLAnimationUtils: NSObject {
         return animation
     }
     
-    class func springAnimation() -> CAKeyframeAnimation {
+    public class func springAnimation() -> CAKeyframeAnimation {
         let animate = CAKeyframeAnimation(keyPath: "transform")
         animate.duration = ZLPhotoConfiguration.default().selectBtnAnimationDuration
         animate.isRemovedOnCompletion = true
