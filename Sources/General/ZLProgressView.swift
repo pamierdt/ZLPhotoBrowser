@@ -26,7 +26,7 @@
 
 import UIKit
 
-class ZLProgressView: UIView {
+public class ZLProgressView: UIView {
     
     private lazy var progressLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
@@ -37,13 +37,13 @@ class ZLProgressView: UIView {
         return layer
     }()
     
-    var progress: CGFloat = 0 {
+    public var progress: CGFloat = 0 {
         didSet {
             self.setNeedsDisplay()
         }
     }
     
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         
         backgroundColor = .clear
@@ -55,7 +55,7 @@ class ZLProgressView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func draw(_ rect: CGRect) {
+    public override func draw(_ rect: CGRect) {
         let center = CGPoint(x: rect.width / 2, y: rect.height / 2)
         let radius = rect.width / 2
         let end = -(.pi / 2) + (.pi * 2 * progress)
