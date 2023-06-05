@@ -26,9 +26,9 @@
 
 import UIKit
 
-let ZLMaxImageWidth: CGFloat = 500
+public let ZLMaxImageWidth: CGFloat = 500
 
-enum ZLLayout {
+public enum ZLLayout {
     static let navTitleFont: UIFont = .zl.font(ofSize: 17)
     
     static let bottomToolViewH: CGFloat = 55
@@ -42,7 +42,7 @@ enum ZLLayout {
     static let bottomToolBtnCornerRadius: CGFloat = 5
 }
 
-func markSelected(source: inout [ZLPhotoModel], selected: inout [ZLPhotoModel]) {
+public func markSelected(source: inout [ZLPhotoModel], selected: inout [ZLPhotoModel]) {
     guard selected.count > 0 else {
         return
     }
@@ -71,7 +71,7 @@ func markSelected(source: inout [ZLPhotoModel], selected: inout [ZLPhotoModel]) 
     }
 }
 
-func getAppName() -> String {
+public func getAppName() -> String {
     if let name = Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String {
         return name
     }
@@ -84,15 +84,15 @@ func getAppName() -> String {
     return "App"
 }
 
-func deviceIsiPhone() -> Bool {
+public func deviceIsiPhone() -> Bool {
     return UIDevice.current.userInterfaceIdiom == .phone
 }
 
-func deviceIsiPad() -> Bool {
+public func deviceIsiPad() -> Bool {
     return UIDevice.current.userInterfaceIdiom == .pad
 }
 
-func deviceSafeAreaInsets() -> UIEdgeInsets {
+public func deviceSafeAreaInsets() -> UIEdgeInsets {
     var insets: UIEdgeInsets = .zero
     
     if #available(iOS 11, *) {
@@ -102,24 +102,24 @@ func deviceSafeAreaInsets() -> UIEdgeInsets {
     return insets
 }
 
-func deviceIsFringeScreen() -> Bool {
+public func deviceIsFringeScreen() -> Bool {
     return deviceSafeAreaInsets().top > 0
 }
 
-func isSmallScreen() -> Bool {
+public func isSmallScreen() -> Bool {
     return UIScreen.main.bounds.height <= 812
 }
 
-func isRTL() -> Bool {
+public func isRTL() -> Bool {
     return UIView.userInterfaceLayoutDirection(for: UIView.appearance().semanticContentAttribute) == .rightToLeft
 }
 
-func showAlertView(_ message: String, _ sender: UIViewController?) {
+public func showAlertView(_ message: String, _ sender: UIViewController?) {
     let action = ZLCustomAlertAction(title: localLanguageTextValue(.ok), style: .default, handler: nil)
     showAlertController(title: nil, message: message, style: .alert, actions: [action], sender: sender)
 }
 
-func showAlertController(title: String?, message: String?, style: ZLCustomAlertStyle, actions: [ZLCustomAlertAction], sender: UIViewController?) {
+public func showAlertController(title: String?, message: String?, style: ZLCustomAlertStyle, actions: [ZLCustomAlertAction], sender: UIViewController?) {
     if let alertClass = ZLPhotoUIConfiguration.default().customAlertClass {
         let alert = alertClass.alert(title: title, message: message ?? "", style: style)
         actions.forEach { alert.addAction($0) }
@@ -137,7 +137,7 @@ func showAlertController(title: String?, message: String?, style: ZLCustomAlertS
     (sender ?? UIApplication.shared.keyWindow?.rootViewController)?.zl.showAlertController(alert)
 }
 
-func canAddModel(_ model: ZLPhotoModel, currentSelectCount: Int, sender: UIViewController?, showAlert: Bool = true) -> Bool {
+public func canAddModel(_ model: ZLPhotoModel, currentSelectCount: Int, sender: UIViewController?, showAlert: Bool = true) -> Bool {
     guard ZLPhotoConfiguration.default().canSelectAsset?(model.asset) ?? true else {
         return false
     }
@@ -173,7 +173,7 @@ func canAddModel(_ model: ZLPhotoModel, currentSelectCount: Int, sender: UIViewC
     return true
 }
 
-func ZLMainAsync(after: TimeInterval = 0, handler: @escaping (() -> Void)) {
+public func ZLMainAsync(after: TimeInterval = 0, handler: @escaping (() -> Void)) {
     if after > 0 {
         DispatchQueue.main.asyncAfter(deadline: .now() + after) {
             handler()
@@ -189,11 +189,11 @@ func ZLMainAsync(after: TimeInterval = 0, handler: @escaping (() -> Void)) {
     }
 }
 
-func zl_debugPrint(_ message: Any...) {
+public func zl_debugPrint(_ message: Any...) {
 //    message.forEach { debugPrint($0) }
 }
 
-func zlLoggerInDebug(_ lastMessage: @autoclosure () -> String, file: StaticString = #file, line: UInt = #line) {
+public func zlLoggerInDebug(_ lastMessage: @autoclosure () -> String, file: StaticString = #file, line: UInt = #line) {
     #if DEBUG
         print("\(file):\(line): \(lastMessage())")
     #endif

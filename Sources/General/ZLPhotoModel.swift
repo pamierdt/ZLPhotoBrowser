@@ -38,7 +38,7 @@ public extension ZLPhotoModel {
     }
     
 }
-
+@objcMembers
 public class ZLPhotoModel: NSObject {
     
     public let ident: String
