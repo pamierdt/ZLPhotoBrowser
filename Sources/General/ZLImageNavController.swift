@@ -27,21 +27,21 @@
 import UIKit
 import Photos
 
-class ZLImageNavController: UINavigationController {
+public class ZLImageNavController: UINavigationController {
     
-    var isSelectedOriginal: Bool = false
+    public var isSelectedOriginal: Bool = false
     
-    var arrSelectedModels: [ZLPhotoModel] = []
+    public var arrSelectedModels: [ZLPhotoModel] = []
     
-    var selectImageBlock: (() -> Void)?
+    public var selectImageBlock: (() -> Void)?
     
-    var cancelBlock: (() -> Void)?
+    public var cancelBlock: (() -> Void)?
     
     deinit {
         zl_debugPrint("ZLImageNavController deinit")
     }
     
-    override var preferredStatusBarStyle: UIStatusBarStyle {
+    public override var preferredStatusBarStyle: UIStatusBarStyle {
         return ZLPhotoUIConfiguration.default().statusBarStyle
     }
     
@@ -49,7 +49,7 @@ class ZLImageNavController: UINavigationController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    override init(rootViewController: UIViewController) {
+    public override init(rootViewController: UIViewController) {
         super.init(rootViewController: rootViewController)
         navigationBar.barStyle = .black
         navigationBar.isTranslucent = true
@@ -62,7 +62,7 @@ class ZLImageNavController: UINavigationController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
