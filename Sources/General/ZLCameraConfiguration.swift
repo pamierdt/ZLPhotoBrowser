@@ -29,110 +29,11 @@ import AVFoundation
 
 @objcMembers
 public class ZLCameraConfiguration: NSObject {
-    @objc public enum CaptureSessionPreset: Int {
-        var avSessionPreset: AVCaptureSession.Preset {
-            switch self {
-            case .cif352x288:
-                return .cif352x288
-            case .vga640x480:
-                return .vga640x480
-            case .hd1280x720:
-                return .hd1280x720
-            case .hd1920x1080:
-                return .hd1920x1080
-            case .photo:
-                return .photo
-            }
-        }
-        
-        case cif352x288
-        case vga640x480
-        case hd1280x720
-        case hd1920x1080
-        case photo
-    }
-    
-    @objc public enum FocusMode: Int {
-        var avFocusMode: AVCaptureDevice.FocusMode {
-            switch self {
-            case .autoFocus:
-                return .autoFocus
-            case .continuousAutoFocus:
-                return .continuousAutoFocus
-            }
-        }
-        
-        case autoFocus
-        case continuousAutoFocus
-    }
-    
-    @objc public enum ExposureMode: Int {
-        var avFocusMode: AVCaptureDevice.ExposureMode {
-            switch self {
-            case .autoExpose:
-                return .autoExpose
-            case .continuousAutoExposure:
-                return .continuousAutoExposure
-            }
-        }
-        
-        case autoExpose
-        case continuousAutoExposure
-    }
-    
-    @objc public enum VideoExportType: Int {
-        var format: String {
-            switch self {
-            case .mov:
-                return "mov"
-            case .mp4:
-                return "mp4"
-            }
-        }
-        
-        var avFileType: AVFileType {
-            switch self {
-            case .mov:
-                return .mov
-            case .mp4:
-                return .mp4
-            }
-        }
-        
-        case mov
-        case mp4
-    }
-    
-    @objc public enum DevicePosition: Int {
-        case back
-        case front
-        
-        /// For custom camera
-        var avDevicePosition: AVCaptureDevice.Position {
-            switch self {
-            case .back:
-                return .back
-            case .front:
-                return .front
-            }
-        }
-        
-        /// For system camera
-        var cameraDevice: UIImagePickerController.CameraDevice {
-            switch self {
-            case .back:
-                return .rear
-            case .front:
-                return .front
-            }
-        }
-    }
-    
     private var pri_allowTakePhoto = true
     /// Allow taking photos in the camera (Need allowSelectImage to be true). Defaults to true.
     public var allowTakePhoto: Bool {
         get {
-            return pri_allowTakePhoto && ZLPhotoConfiguration.default().allowSelectImage
+            pri_allowTakePhoto && ZLPhotoConfiguration.default().allowSelectImage
         }
         set {
             pri_allowTakePhoto = newValue
@@ -143,7 +44,7 @@ public class ZLCameraConfiguration: NSObject {
     /// Allow recording in the camera (Need allowSelectVideo to be true). Defaults to true.
     public var allowRecordVideo: Bool {
         get {
-            return pri_allowRecordVideo && ZLPhotoConfiguration.default().allowSelectVideo
+            pri_allowRecordVideo && ZLPhotoConfiguration.default().allowSelectVideo
         }
         set {
             pri_allowRecordVideo = newValue
@@ -154,7 +55,7 @@ public class ZLCameraConfiguration: NSObject {
     /// Minimum recording duration. Defaults to 0.
     public var minRecordDuration: ZLPhotoConfiguration.Second {
         get {
-            return pri_minRecordDuration
+            pri_minRecordDuration
         }
         set {
             pri_minRecordDuration = max(0, newValue)
@@ -165,7 +66,7 @@ public class ZLCameraConfiguration: NSObject {
     /// Maximum recording duration. Defaults to 20, minimum is 1.
     public var maxRecordDuration: ZLPhotoConfiguration.Second {
         get {
-            return pri_maxRecordDuration
+            pri_maxRecordDuration
         }
         set {
             pri_maxRecordDuration = max(1, newValue)
@@ -192,6 +93,119 @@ public class ZLCameraConfiguration: NSObject {
     
     /// The default camera position after entering the camera. Defaults to back.
     public var devicePosition: ZLCameraConfiguration.DevicePosition = .back
+    
+    private var pri_videoCodecType: Any?
+    /// The codecs for video capture. Defaults to .h264
+    @available(iOS 11.0, *)
+    public var videoCodecType: AVVideoCodecType {
+        get {
+            (pri_videoCodecType as? AVVideoCodecType) ?? .h264
+        }
+        set {
+            pri_videoCodecType = newValue
+        }
+    }
+}
+
+public extension ZLCameraConfiguration {
+    @objc enum CaptureSessionPreset: Int {
+        var avSessionPreset: AVCaptureSession.Preset {
+            switch self {
+            case .cif352x288:
+                return .cif352x288
+            case .vga640x480:
+                return .vga640x480
+            case .hd1280x720:
+                return .hd1280x720
+            case .hd1920x1080:
+                return .hd1920x1080
+            case .photo:
+                return .photo
+            }
+        }
+        
+        case cif352x288
+        case vga640x480
+        case hd1280x720
+        case hd1920x1080
+        case photo
+    }
+    
+    @objc enum FocusMode: Int {
+        var avFocusMode: AVCaptureDevice.FocusMode {
+            switch self {
+            case .autoFocus:
+                return .autoFocus
+            case .continuousAutoFocus:
+                return .continuousAutoFocus
+            }
+        }
+        
+        case autoFocus
+        case continuousAutoFocus
+    }
+    
+    @objc enum ExposureMode: Int {
+        var avFocusMode: AVCaptureDevice.ExposureMode {
+            switch self {
+            case .autoExpose:
+                return .autoExpose
+            case .continuousAutoExposure:
+                return .continuousAutoExposure
+            }
+        }
+        
+        case autoExpose
+        case continuousAutoExposure
+    }
+    
+    @objc enum VideoExportType: Int {
+        var format: String {
+            switch self {
+            case .mov:
+                return "mov"
+            case .mp4:
+                return "mp4"
+            }
+        }
+        
+        var avFileType: AVFileType {
+            switch self {
+            case .mov:
+                return .mov
+            case .mp4:
+                return .mp4
+            }
+        }
+        
+        case mov
+        case mp4
+    }
+    
+    @objc enum DevicePosition: Int {
+        case back
+        case front
+        
+        /// For custom camera
+        var avDevicePosition: AVCaptureDevice.Position {
+            switch self {
+            case .back:
+                return .back
+            case .front:
+                return .front
+            }
+        }
+        
+        /// For system camera
+        var cameraDevice: UIImagePickerController.CameraDevice {
+            switch self {
+            case .back:
+                return .rear
+            case .front:
+                return .front
+            }
+        }
+    }
 }
 
 // MARK: chaining
@@ -260,6 +274,13 @@ public extension ZLCameraConfiguration {
     @discardableResult
     func devicePosition(_ position: ZLCameraConfiguration.DevicePosition) -> ZLCameraConfiguration {
         devicePosition = position
+        return self
+    }
+    
+    @available(iOS 11.0, *)
+    @discardableResult
+    func videoCodecType(_ type: AVVideoCodecType) -> ZLCameraConfiguration {
+        videoCodecType = type
         return self
     }
 }
