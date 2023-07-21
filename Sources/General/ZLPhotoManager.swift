@@ -376,12 +376,19 @@ public class ZLPhotoManager: NSObject {
         return false
     }
     
-    public class func fetchAVAsset(forVideo asset: PHAsset, completion: @escaping (AVAsset?, [AnyHashable: Any]?) -> Void) -> PHImageRequestID {
+    @objc public class func fetchAVAsset(forVideo asset: PHAsset, progress: ((CGFloat) -> Void)? = nil, completion: @escaping (AVAsset?, [AnyHashable: Any]?) -> Void) -> PHImageRequestID {
+  
         let options = PHVideoRequestOptions()
         options.deliveryMode = .automatic
         options.isNetworkAccessAllowed = true
         
         if asset.zl.isInCloud {
+            progress?(0)
+            options.progressHandler = { pro, error, stop, info in
+                ZLMainAsync {
+                    progress?(CGFloat(pro))
+                }
+            }
             return PHImageManager.default().requestExportSession(forVideo: asset, options: options, exportPreset: AVAssetExportPresetHighestQuality) { session, info in
                 // iOS11 and earlier, callback is not on the main thread.
                 ZLMainAsync {
