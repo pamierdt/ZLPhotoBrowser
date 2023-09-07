@@ -524,12 +524,7 @@ open class ZLCustomCamera: UIViewController {
             // 相机画面输入流
             self.videoInput = input
             
-            let preset = cameraConfig.sessionPreset.avSessionPreset
-            if self.session.canSetSessionPreset(preset) {
-                self.session.sessionPreset = preset
-            } else {
-                self.session.sessionPreset = .photo
-            }
+            self.refreshSessionPreset(device: camera)
             
             let movieFileOutput = AVCaptureMovieFileOutput()
             // 解决视频录制超过10s没有声音的bug
@@ -566,6 +561,23 @@ open class ZLCustomCamera: UIViewController {
             self.cameraConfigureFinish = true
             
             self.session.startRunning()
+        }
+    }
+    
+    private func refreshSessionPreset(device: AVCaptureDevice) {
+        func setSessionPreset(_ preset: AVCaptureSession.Preset) {
+            guard session.sessionPreset != preset else {
+                return
+            }
+            
+            session.sessionPreset = preset
+        }
+        
+        let preset = cameraConfig.sessionPreset.avSessionPreset
+        if device.supportsSessionPreset(preset), session.canSetSessionPreset(preset) {
+            setSessionPreset(preset)
+        } else {
+            setSessionPreset(.photo)
         }
     }
     
@@ -796,12 +808,16 @@ open class ZLCustomCamera: UIViewController {
                 
                 if let newVideoInput = newVideoInput {
                     self.session.beginConfiguration()
+                    
+                    self.refreshSessionPreset(device: newVideoInput.device)
+                    
                     self.session.removeInput(currInput)
                     
                     if self.session.canAddInput(newVideoInput) {
                         self.session.addInput(newVideoInput)
                         self.videoInput = newVideoInput
                     } else {
+                        self.refreshSessionPreset(device: currInput.device)
                         self.session.addInput(currInput)
                     }
                     
@@ -1294,7 +1310,7 @@ extension ZLCustomCamera: AVCaptureFileOutputRecordingDelegate {
             
             // 拼接视频
             if self.recordUrls.count > 1 {
-                let hud = ZLProgressHUD.show()
+                let hud = ZLProgressHUD.show(toast: .processing)
                 ZLVideoManager.mergeVideos(fileUrls: self.recordUrls) { [weak self] url, error in
                     hud.hide()
                     

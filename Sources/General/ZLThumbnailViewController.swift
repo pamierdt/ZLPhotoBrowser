@@ -633,7 +633,6 @@ public class ZLThumbnailViewController: UIViewController {
                             
                             ZLMainAsync {
                                 config.didSelectAsset?(m.asset)
-                                
                             }
                         }
                     }
@@ -821,7 +820,7 @@ public class ZLThumbnailViewController: UIViewController {
     
     private func save(image: UIImage?, videoUrl: URL?) {
         if let image = image {
-            let hud = ZLProgressHUD.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveImageToAlbum(image: image) { [weak self] suc, asset in
                 hud.hide()
                 if suc, let at = asset {
@@ -832,7 +831,7 @@ public class ZLThumbnailViewController: UIViewController {
                 }
             }
         } else if let videoUrl = videoUrl {
-            let hud = ZLProgressHUD.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveVideoToAlbum(url: videoUrl) { [weak self] suc, asset in
                 hud.hide()
                 if suc, let at = asset {
@@ -867,6 +866,10 @@ public class ZLThumbnailViewController: UIViewController {
         if !config.allowMixSelect, newModel.type == .video {
             canSelect = false
         }
+        // 单选模式，且不显示选择按钮时，不允许选择
+        if config.maxSelectCount == 1, !config.showSelectBtnWhenSingleSelect {
+            canSelect = false
+        }
         if canSelect, canAddModel(newModel, currentSelectCount: nav?.arrSelectedModels.count ?? 0, sender: self, showAlert: false) {
             if !shouldDirectEdit(newModel) {
                 newModel.isSelected = true
@@ -875,6 +878,7 @@ public class ZLThumbnailViewController: UIViewController {
                 
                 if config.callbackDirectlyAfterTakingPhoto {
                     doneBtnClick()
+                    return
                 }
             }
         }
@@ -896,9 +900,17 @@ public class ZLThumbnailViewController: UIViewController {
             return
         }
         
-        let hud = ZLProgressHUD.show()
+        var requestAssetID: PHImageRequestID?
         
-        ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self, weak nav] image, isDegraded in
+        let hud = ZLProgressHUD.show(timeout: ZLPhotoConfiguration.default().timeout)
+        hud.timeoutBlock = { [weak self] in
+            showAlertView(localLanguageTextValue(.timeout), self)
+            if let requestAssetID = requestAssetID {
+                PHImageManager.default().cancelImageRequest(requestAssetID)
+            }
+        }
+        
+        requestAssetID = ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self, weak nav] image, isDegraded in
             guard !isDegraded else {
                 return
             }
@@ -924,12 +936,12 @@ public class ZLThumbnailViewController: UIViewController {
         let nav = navigationController as? ZLImageNavController
         let config = ZLPhotoConfiguration.default()
         
-        var requestAvAssetID: PHImageRequestID?
+        var requestAssetID: PHImageRequestID?
         let hud = ZLProgressHUD.show(timeout: config.timeout)
         hud.timeoutBlock = { [weak self] in
             showAlertView(localLanguageTextValue(.timeout), self)
-            if let requestAvAssetID = requestAvAssetID {
-                PHImageManager.default().cancelImageRequest(requestAvAssetID)
+            if let requestAssetID = requestAssetID {
+                PHImageManager.default().cancelImageRequest(requestAssetID)
             }
         }
         
@@ -962,7 +974,7 @@ public class ZLThumbnailViewController: UIViewController {
         }
         
         // 提前fetch一下 avasset
-        requestAvAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
+        requestAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
             hud.hide()
             if let avAsset = avAsset {
                 inner_showEditVideoVC(avAsset)
@@ -1061,42 +1073,46 @@ extension ZLThumbnailViewController: UICollectionViewDataSource, UICollectionVie
             model = arrDataSources[indexPath.row]
         }
         
-        cell.selectedBlock = { [weak self, weak nav, weak cell] isSelected in
-            if !isSelected {
+        cell.selectedBlock = { [weak self, weak nav] block in
+            if !model.isSelected {
                 let currentSelectCount = nav?.arrSelectedModels.count ?? 0
                 guard canAddModel(model, currentSelectCount: currentSelectCount, sender: self) else {
                     return
                 }
-                if self?.shouldDirectEdit(model) == false {
-                    model.isSelected = true
-                    nav?.arrSelectedModels.append(model)
-                    config.didSelectAsset?(model.asset)
-                    
-                    cell?.btnSelect.isSelected = true
-                    self?.refreshCellIndexAndMaskView()
-                    if config.maxSelectCount == 1, !config.allowPreviewPhotos {
-                        self?.doneBtnClick()
+                
+                downloadAssetIfNeed(model: model, sender: self) {
+                    if self?.shouldDirectEdit(model) == false {
+                        model.isSelected = true
+                        nav?.arrSelectedModels.append(model)
+                        block(true)
+                        
+                        config.didSelectAsset?(model.asset)
+                        self?.refreshCellIndexAndMaskView()
+                        
+                        if config.maxSelectCount == 1, !config.allowPreviewPhotos {
+                            self?.doneBtnClick()
+                        }
+                        
+                        self?.resetBottomToolBtnStatus()
                     }
                 }
             } else {
-                cell?.btnSelect.isSelected = false
                 model.isSelected = false
                 nav?.arrSelectedModels.removeAll { $0 == model }
-                config.didDeselectAsset?(model.asset)
+                block(false)
                 
+                config.didDeselectAsset?(model.asset)
                 self?.refreshCellIndexAndMaskView()
+                
+                self?.resetBottomToolBtnStatus()
             }
-            self?.resetBottomToolBtnStatus()
         }
         
-        cell.indexLabel.isHidden = true
-        if ZLPhotoConfiguration.default().showSelectedIndex {
-            for (index, selM) in (nav?.arrSelectedModels ?? []).enumerated() {
-                if model == selM {
-                    setCellIndex(cell, showIndexLabel: true, index: index + 1)
-                    break
-                }
-            }
+        if config.showSelectedIndex,
+           let index = nav?.arrSelectedModels.firstIndex(where: { $0 == model }){
+            setCellIndex(cell, showIndexLabel: true, index: index + 1)
+        } else {
+            cell.indexLabel.isHidden = true
         }
         
         setCellMaskView(cell, isSelected: model.isSelected, model: model)

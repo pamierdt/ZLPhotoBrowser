@@ -189,12 +189,11 @@ class ViewController: UIViewController {
              .allowSwitchCamera(false)
              .showFlashSwitch(true)
           */
-        
         ZLPhotoConfiguration.default()
             // You can first determine whether the asset is allowed to be selected.
-            .canSelectAsset { _ in
-                true
-            }
+            .canSelectAsset { _ in true }
+            .didSelectAsset { _ in }
+            .didDeselectAsset { _ in }
             .noAuthorityCallback { type in
                 switch type {
                 case .library:
@@ -250,7 +249,7 @@ class ViewController: UIViewController {
             debugPrint("isOriginal: \(isOriginal)")
             
 //            guard !self.selectedAssets.isEmpty else { return }
-//            self?.saveAsset(self.selectedAssets[0])
+//            self.saveAsset(self.selectedAssets[0])
         }
         ac.cancelBlock = {
             debugPrint("cancel select")
@@ -274,10 +273,16 @@ class ViewController: UIViewController {
             filePath = NSTemporaryDirectory().appendingFormat("%@.%@", UUID().uuidString, "jpg")
         }
         
-        debugPrint("---- \(filePath)")
+        debugPrint("---- start saving \(filePath)")
         let url = URL(fileURLWithPath: filePath)
-        ZLPhotoManager.saveAsset(asset, toFile: url) { _ in
+        ZLPhotoManager.saveAsset(asset, toFile: url) { error in
             do {
+                if let error = error {
+                     debugPrint("save error: \(error)")
+                    return
+                }
+                
+                debugPrint("save suc: \(url)")
                 if asset.mediaType == .video {
                     _ = AVURLAsset(url: url)
                 } else {
@@ -352,9 +357,8 @@ class ViewController: UIViewController {
     }
     
     func save(image: UIImage?, videoUrl: URL?) {
-        let hud = ZLProgressHUD(style: ZLPhotoUIConfiguration.default().hudStyle)
         if let image = image {
-            hud.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveImageToAlbum(image: image) { [weak self] suc, asset in
                 if suc, let asset = asset {
                     let resultModel = ZLResultModel(asset: asset, image: image, isEdited: false, index: 0)
@@ -368,7 +372,7 @@ class ViewController: UIViewController {
                 hud.hide()
             }
         } else if let videoUrl = videoUrl {
-            hud.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveVideoToAlbum(url: videoUrl) { [weak self] suc, asset in
                 if suc, let asset = asset {
                     self?.fetchImage(for: asset)

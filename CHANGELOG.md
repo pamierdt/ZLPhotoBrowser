@@ -2,6 +2,41 @@
 
 -----
 
+## [4.4.4](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.4.4) (2023-08-25)
+
+### Add:
+* Support downloading video data from iCloud before selecting a video.
+* Makes the drawn curves smoother when editing images.
+
+### Fix:
+* Fix a bug that may fail to save videos stored on iCloud.
+
+---
+
+## [4.4.3.2 - 4.4.3 Patch](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.4.3.2) (2023-07-26)
+
+### Fix:
+* Disable TextView when user ends editing.
+
+---
+
+## [4.4.3.1 - 4.4.3 Patch](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.4.3.1) (2023-07-26)
+
+### Fix:
+* Delete some time-consuming codes to improve the image loading speed of the thumbnail interface.
+
+---
+
+## [4.4.3](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.4.3) (2023-07-24)
+
+### Add:
+* Support to limit the data size of the video.
+* Add two blocks, called when asset is selected and deselected.
+* Support setting video codec type in custom camera. [#831](https://github.com/longitachi/ZLPhotoBrowser/pull/831)
+* Text stickers support display background color.
+
+---
+    
 ## [4.4.2](https://github.com/longitachi/ZLPhotoBrowser/releases/tag/4.4.2) (2023-06-08)
 
 ### Add:

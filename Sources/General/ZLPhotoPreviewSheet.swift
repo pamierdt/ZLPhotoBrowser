@@ -580,7 +580,7 @@ public class ZLPhotoPreviewSheet: UIView {
             }
         }
         
-        let hud = ZLProgressHUD.show(timeout: ZLPhotoConfiguration.default().timeout)
+        let hud = ZLProgressHUD.show(toast: .processing, timeout: ZLPhotoConfiguration.default().timeout)
         
         var timeout = false
         hud.timeoutBlock = { [weak self] in
@@ -602,16 +602,14 @@ public class ZLPhotoPreviewSheet: UIView {
             }
             
             if let vc = viewController {
-                self?.isHidden = true
-                self?.animate = false
                 vc.dismiss(animated: true) {
                     call()
                     self?.hide()
                 }
             } else {
-                self?.hide(completion: {
+                self?.hide {
                     call()
-                })
+                }
             }
             
             self?.arrSelectedModels.removeAll()
@@ -672,10 +670,9 @@ public class ZLPhotoPreviewSheet: UIView {
                 let tvc = ZLThumbnailViewController(albumList: cameraRoll)
                 nav.pushViewController(tvc, animated: true)
             }
-            if deviceIsiPad() {
-                self.sender?.present(nav, animated: true, completion: nil)
-            } else {
-                self.sender?.showDetailViewController(nav, sender: nil)
+            
+            self.sender?.present(nav, animated: true) {
+                self.isHidden = true
             }
         }
     }
@@ -696,9 +693,17 @@ public class ZLPhotoPreviewSheet: UIView {
     }
     
     private func showEditImageVC(model: ZLPhotoModel) {
-        let hud = ZLProgressHUD.show()
+        var requestAssetID: PHImageRequestID?
         
-        ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self] image, isDegraded in
+        let hud = ZLProgressHUD.show(timeout: ZLPhotoConfiguration.default().timeout)
+        hud.timeoutBlock = { [weak self] in
+            showAlertView(localLanguageTextValue(.timeout), self?.sender)
+            if let requestAssetID = requestAssetID {
+                PHImageManager.default().cancelImageRequest(requestAssetID)
+            }
+        }
+        
+        requestAssetID = ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self] image, isDegraded in
             if !isDegraded {
                 if let image = image {
                     ZLEditImageViewController.showEditImageVC(parentVC: self?.sender, image: image, editModel: model.editImageModel) { [weak self] ei, editImageModel in
@@ -720,13 +725,13 @@ public class ZLPhotoPreviewSheet: UIView {
     
     private func showEditVideoVC(model: ZLPhotoModel) {
         let config = ZLPhotoConfiguration.default()
-        var requestAvAssetID: PHImageRequestID?
+        var requestAssetID: PHImageRequestID?
         
         let hud = ZLProgressHUD.show(timeout: config.timeout)
         hud.timeoutBlock = { [weak self] in
             showAlertView(localLanguageTextValue(.timeout), self?.sender)
-            if let requestAvAssetID = requestAvAssetID {
-                PHImageManager.default().cancelImageRequest(requestAvAssetID)
+            if let requestAssetID = requestAssetID {
+                PHImageManager.default().cancelImageRequest(requestAssetID)
             }
         }
         
@@ -761,7 +766,7 @@ public class ZLPhotoPreviewSheet: UIView {
         }
         
         // 提前fetch一下 avasset
-        requestAvAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
+        requestAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
             hud.hide()
             if let avAsset = avAsset {
                 inner_showEditVideoVC(avAsset)
@@ -795,7 +800,7 @@ public class ZLPhotoPreviewSheet: UIView {
     
     private func save(image: UIImage?, videoUrl: URL?) {
         if let image = image {
-            let hud = ZLProgressHUD.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveImageToAlbum(image: image) { [weak self] suc, asset in
                 hud.hide()
                 if suc, let asset = asset {
@@ -806,7 +811,7 @@ public class ZLPhotoPreviewSheet: UIView {
                 }
             }
         } else if let videoUrl = videoUrl {
-            let hud = ZLProgressHUD.show()
+            let hud = ZLProgressHUD.show(toast: .processing)
             ZLPhotoManager.saveVideoToAlbum(url: videoUrl) { [weak self] suc, asset in
                 hud.hide()
                 if suc, let at = asset {
@@ -821,20 +826,26 @@ public class ZLPhotoPreviewSheet: UIView {
     
     private func handleDataArray(newModel: ZLPhotoModel) {
         arrDataSources.insert(newModel, at: 0)
+        let config = ZLPhotoConfiguration.default()
         
         var canSelect = true
         // If mixed selection is not allowed, and the newModel type is video, it will not be selected.
-        if !ZLPhotoConfiguration.default().allowMixSelect, newModel.type == .video {
+        if !config.allowMixSelect, newModel.type == .video {
+            canSelect = false
+        }
+        // 单选模式，且不显示选择按钮时，不允许选择
+        if config.maxSelectCount == 1, !config.showSelectBtnWhenSingleSelect {
             canSelect = false
         }
         if canSelect, canAddModel(newModel, currentSelectCount: arrSelectedModels.count, sender: sender, showAlert: false) {
             if !shouldDirectEdit(newModel) {
                 newModel.isSelected = true
                 arrSelectedModels.append(newModel)
-                ZLPhotoConfiguration.default().didSelectAsset?(newModel.asset)
+                config.didSelectAsset?(newModel.asset)
                 
-                if ZLPhotoConfiguration.default().callbackDirectlyAfterTakingPhoto {
+                if config.callbackDirectlyAfterTakingPhoto {
                     requestSelectPhoto()
+                    return
                 }
             }
         }
@@ -883,40 +894,42 @@ extension ZLPhotoPreviewSheet: UICollectionViewDataSource, UICollectionViewDeleg
         
         let model = arrDataSources[indexPath.row]
         
-        cell.selectedBlock = { [weak self, weak cell] isSelected in
+        cell.selectedBlock = { [weak self] block in
             guard let `self` = self else { return }
-            if !isSelected {
+            
+            if !model.isSelected {
                 guard canAddModel(model, currentSelectCount: self.arrSelectedModels.count, sender: self.sender) else {
                     return
                 }
-                if !self.shouldDirectEdit(model) {
-                    model.isSelected = true
-                    self.arrSelectedModels.append(model)
-                    config.didSelectAsset?(model.asset)
-                    
-                    cell?.btnSelect.isSelected = true
-                    self.refreshCellIndex()
+                
+                downloadAssetIfNeed(model: model, sender: self.sender) {
+                    if !self.shouldDirectEdit(model) {
+                        model.isSelected = true
+                        self.arrSelectedModels.append(model)
+                        block(true)
+                        
+                        config.didSelectAsset?(model.asset)
+                        self.refreshCellIndex()
+                        self.changeCancelBtnTitle()
+                    }
                 }
             } else {
-                cell?.btnSelect.isSelected = false
                 model.isSelected = false
                 self.arrSelectedModels.removeAll { $0 == model }
+                block(false)
                 
                 config.didDeselectAsset?(model.asset)
                 self.refreshCellIndex()
+                
+                self.changeCancelBtnTitle()
             }
-            
-            self.changeCancelBtnTitle()
         }
         
-        cell.indexLabel.isHidden = true
-        if config.showSelectedIndex {
-            for (index, selM) in arrSelectedModels.enumerated() {
-                if model == selM {
-                    setCellIndex(cell, showIndexLabel: true, index: index + 1)
-                    break
-                }
-            }
+        if config.showSelectedIndex,
+           let index = arrSelectedModels.firstIndex(where: { $0 == model }){
+            setCellIndex(cell, showIndexLabel: true, index: index + 1)
+        } else {
+            cell.indexLabel.isHidden = true
         }
         
         setCellMaskView(cell, isSelected: model.isSelected, model: model)
@@ -1012,6 +1025,7 @@ extension ZLPhotoPreviewSheet: UICollectionViewDataSource, UICollectionViewDeleg
         guard ZLPhotoConfiguration.default().showSelectedIndex else {
             return
         }
+        
         cell?.index = index
         cell?.indexLabel.isHidden = !showIndexLabel
     }

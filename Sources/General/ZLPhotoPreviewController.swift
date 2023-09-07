@@ -85,7 +85,7 @@ public class ZLPhotoPreviewController: UIViewController {
     
     private lazy var selectBtn: ZLEnlargeButton = {
         let btn = ZLEnlargeButton(type: .custom)
-        btn.setImage(.zl.getImage("zl_btn_circle"), for: .normal)
+        btn.setImage(.zl.getImage("zl_btn_unselected_with_check"), for: .normal)
         btn.setImage(.zl.getImage("zl_btn_selected"), for: .selected)
         btn.enlargeInset = 10
         btn.addTarget(self, action: #selector(selectBtnClick), for: .touchUpInside)
@@ -532,38 +532,45 @@ public class ZLPhotoPreviewController: UIViewController {
             selPhotoPreview?.removeSelModel(model: currentModel)
             
             config.didDeselectAsset?(currentModel.asset)
+            
+            resetSubViewStatus()
         } else {
-            if config.animateSelectBtnWhenSelect {
-                selectBtn.layer.add(ZLAnimationUtils.springAnimation(), forKey: nil)
-            }
             if !canAddModel(currentModel, currentSelectCount: nav.arrSelectedModels.count, sender: self) {
                 return
             }
-            currentModel.isSelected = true
-            nav.arrSelectedModels.append(currentModel)
-            selPhotoPreview?.addSelModel(model: currentModel)
             
-            config.didSelectAsset?(currentModel.asset)
+            downloadAssetIfNeed(model: currentModel, sender: self) { [weak self] in
+                if config.animateSelectBtnWhenSelect {
+                    self?.selectBtn.layer.add(ZLAnimationUtils.springAnimation(), forKey: nil)
+                }
+                
+                currentModel.isSelected = true
+                nav.arrSelectedModels.append(currentModel)
+                self?.selPhotoPreview?.addSelModel(model: currentModel)
+                
+                config.didSelectAsset?(currentModel.asset)
+                
+                self?.resetSubViewStatus()
+            }
         }
-        resetSubViewStatus()
     }
     
     @objc private func editBtnClick() {
         let config = ZLPhotoConfiguration.default()
         let model = arrDataSources[currentIndex]
         
-        var requestAvAssetID: PHImageRequestID?
+        var requestAssetID: PHImageRequestID?
         let hud = ZLProgressHUD(style: ZLPhotoUIConfiguration.default().hudStyle)
         hud.timeoutBlock = { [weak self] in
             showAlertView(localLanguageTextValue(.timeout), self)
-            if let requestAvAssetID = requestAvAssetID {
-                PHImageManager.default().cancelImageRequest(requestAvAssetID)
+            if let requestAssetID = requestAssetID {
+                PHImageManager.default().cancelImageRequest(requestAssetID)
             }
         }
         
         if model.type == .image || (!config.allowSelectGif && model.type == .gif) || (!config.allowSelectLivePhoto && model.type == .livePhoto) {
             hud.show(timeout: ZLPhotoConfiguration.default().timeout)
-            requestAvAssetID = ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self] image, isDegraded in
+            requestAssetID = ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self] image, isDegraded in
                 if !isDegraded {
                     if let image = image {
                         self?.showEditImageVC(image: image)
@@ -576,7 +583,7 @@ public class ZLPhotoPreviewController: UIViewController {
         } else if model.type == .video || config.allowEditVideo {
             hud.show(timeout: ZLPhotoConfiguration.default().timeout)
             // fetch avasset
-            requestAvAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
+            requestAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
                 hud.hide()
                 if let avAsset = avAsset {
                     self?.showEditVideoVC(model: model, avAsset: avAsset)
@@ -631,17 +638,20 @@ public class ZLPhotoPreviewController: UIViewController {
         }
         
         let currentModel = arrDataSources[currentIndex]
-        if autoSelectCurrentIfNotSelectAnyone {
-            if nav.arrSelectedModels.isEmpty, canAddModel(currentModel, currentSelectCount: nav.arrSelectedModels.count, sender: self) {
-                nav.arrSelectedModels.append(currentModel)
-                
-                ZLPhotoConfiguration.default().didSelectAsset?(currentModel.asset)
-            }
+        
+        guard autoSelectCurrentIfNotSelectAnyone, nav.arrSelectedModels.isEmpty else {
+            callBackBeforeDone()
+            return
+        }
+        
+        guard canAddModel(currentModel, currentSelectCount: nav.arrSelectedModels.count, sender: self) else {
+            return
+        }
+        
+        downloadAssetIfNeed(model: currentModel, sender: self) { [weak nav] in
+            nav?.arrSelectedModels.append(currentModel)
+            ZLPhotoConfiguration.default().didSelectAsset?(currentModel.asset)
             
-            if !nav.arrSelectedModels.isEmpty {
-                callBackBeforeDone()
-            }
-        } else {
             callBackBeforeDone()
         }
     }
@@ -839,8 +849,12 @@ extension ZLPhotoPreviewController: UICollectionViewDataSource, UICollectionView
         return baseCell
     }
     
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        (cell as? ZLPreviewBaseCell)?.willDisplay()
+    }
+    
     public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        (cell as? ZLPreviewBaseCell)?.resetSubViewStatusWhenCellEndDisplay()
+        (cell as? ZLPreviewBaseCell)?.didEndDisplaying()
     }
 }
 
