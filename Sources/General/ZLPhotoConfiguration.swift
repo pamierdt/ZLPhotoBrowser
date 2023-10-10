@@ -43,9 +43,6 @@ public class ZLPhotoConfiguration: NSObject {
         ZLPhotoConfiguration.single = ZLPhotoConfiguration()
     }
     
-    /// Photo sorting method, the preview interface is not affected by this parameter. Defaults to true.
-    public var sortAscending = true
-    
     private var pri_maxSelectCount = 9
     /// Anything superior than 1 will enable the multiple selection feature. Defaults to 9.
     public var maxSelectCount: Int {
@@ -145,12 +142,6 @@ public class ZLPhotoConfiguration: NSObject {
         }
     }
     
-    /// Control whether to display the selection button animation when selecting. Defaults to true.
-    public var animateSelectBtnWhenSelect = true
-    
-    /// Animation duration for select button
-    public var selectBtnAnimationDuration: CFTimeInterval = 0.5
-    
     /// After selecting a image/video in the thumbnail interface, enter the editing interface directly. Defaults to false.
     /// - discussion: Editing image is only valid when allowEditImage is true and maxSelectCount is 1.
     /// Editing video is only valid when allowEditVideo is true and maxSelectCount is 1.
@@ -211,30 +202,6 @@ public class ZLPhotoConfiguration: NSObject {
     
     /// Image editor configuration.
     public var editImageConfiguration = ZLEditImageConfiguration()
-    
-    /// Show the image captured by the camera is displayed on the camera button inside the album. Defaults to false.
-    public var showCaptureImageOnTakePhotoBtn = false
-    
-    /// In single selection mode, whether to display the selection button. Defaults to false.
-    public var showSelectBtnWhenSingleSelect = false
-    
-    /// Overlay a mask layer on top of the selected photos. Defaults to true.
-    public var showSelectedMask = true
-    
-    /// Display a border on the selected photos cell. Defaults to false.
-    public var showSelectedBorder = false
-    
-    /// Overlay a mask layer above the cells that cannot be selected. Defaults to true.
-    public var showInvalidMask = true
-    
-    /// Display the index of the selected photos. Defaults to true.
-    public var showSelectedIndex = true
-    
-    /// Display the selected photos at the bottom of the preview large photos interface. Defaults to true.
-    public var showSelectedPhotoPreview = true
-    
-    /// Timeout for image parsing. Defaults to 20.
-    public var timeout: TimeInterval = 20
     
     /// Whether to use custom camera. Defaults to true.
     public var useCustomCamera = true

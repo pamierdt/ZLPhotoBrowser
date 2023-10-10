@@ -1,8 +1,8 @@
 //
-//  UIFont+ZLPhotoBrowser.swift
+//  UIScrollView+ZLPhotoBrowser.swift
 //  ZLPhotoBrowser
 //
-//  Created by long on 2022/7/7.
+//  Created by long on 2023/10/8.
 //
 //  Copyright (c) 2020 Long Zhang <495181165@qq.com>
 //
@@ -26,12 +26,23 @@
 
 import UIKit
 
-extension ZLPhotoBrowserWrapper where Base: UIFont {
-    static func font(ofSize size: CGFloat, bold: Bool = false) -> UIFont {
-        guard let name = ZLCustomFontDeploy.fontName else {
-            return UIFont.systemFont(ofSize: size, weight: bold ? .medium : .regular)
+extension ZLPhotoBrowserWrapper where Base: UIScrollView {
+    var contentInset: UIEdgeInsets {
+        if #available(iOS 11.0, *) {
+            return base.adjustedContentInset
+        } else {
+            return base.contentInset
         }
-        
-        return UIFont(name: name, size: size) ?? UIFont.systemFont(ofSize: size, weight: bold ? .medium : .regular)
+    }
+    
+    func scrollToTop(animated: Bool = true) {
+        base.setContentOffset(CGPoint(x: 0, y: -contentInset.top), animated: animated)
+    }
+    
+    func scrollToBottom(animated: Bool = true) {
+        let contentSizeH = base.contentSize.height
+        let insetBottom = contentInset.bottom
+        let offsetY = contentSizeH + insetBottom - base.zl.height
+        base.setContentOffset(CGPoint(x: 0, y: offsetY), animated: animated)
     }
 }

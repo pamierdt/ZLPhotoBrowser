@@ -30,6 +30,12 @@ import UIKit
 
 public extension ZLPhotoUIConfiguration {
     @discardableResult
+    func sortAscending(_ ascending: Bool) -> ZLPhotoUIConfiguration {
+        sortAscending = ascending
+        return self
+    }
+    
+    @discardableResult
     func style(_ style: ZLPhotoBrowserStyle) -> ZLPhotoUIConfiguration {
         self.style = style
         return self
@@ -99,6 +105,84 @@ public extension ZLPhotoUIConfiguration {
     @discardableResult
     func minimumLineSpacing(_ value: CGFloat) -> ZLPhotoUIConfiguration {
         minimumLineSpacing = value
+        return self
+    }
+    
+    @discardableResult
+    func animateSelectBtnWhenSelectInThumbVC(_ animate: Bool) -> ZLPhotoUIConfiguration {
+        animateSelectBtnWhenSelectInThumbVC = animate
+        return self
+    }
+    
+    @discardableResult
+    func animateSelectBtnWhenSelectInPreviewVC(_ animate: Bool) -> ZLPhotoUIConfiguration {
+        animateSelectBtnWhenSelectInPreviewVC = animate
+        return self
+    }
+    
+    @discardableResult
+    func selectBtnAnimationDuration(_ duration: CFTimeInterval) -> ZLPhotoUIConfiguration {
+        selectBtnAnimationDuration = duration
+        return self
+    }
+    
+    @discardableResult
+    func showIndexOnSelectBtn(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showIndexOnSelectBtn = value
+        return self
+    }
+    
+    @discardableResult
+    func showScrollToBottomBtn(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showScrollToBottomBtn = value
+        return self
+    }
+    
+    @discardableResult
+    func showCaptureImageOnTakePhotoBtn(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showCaptureImageOnTakePhotoBtn = value
+        return self
+    }
+    
+    @discardableResult
+    func showSelectBtnWhenSingleSelect(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showSelectBtnWhenSingleSelect = value
+        return self
+    }
+    
+    @discardableResult
+    func showSelectedMask(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showSelectedMask = value
+        return self
+    }
+    
+    @discardableResult
+    func showSelectedBorder(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showSelectedBorder = value
+        return self
+    }
+    
+    @discardableResult
+    func showInvalidMask(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showInvalidMask = value
+        return self
+    }
+    
+    @discardableResult
+    func showSelectedIndex(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showSelectedIndex = value
+        return self
+    }
+    
+    @discardableResult
+    func showSelectedPhotoPreview(_ value: Bool) -> ZLPhotoUIConfiguration {
+        showSelectedPhotoPreview = value
+        return self
+    }
+    
+    @discardableResult
+    func timeout(_ timeout: TimeInterval) -> ZLPhotoUIConfiguration {
+        self.timeout = timeout
         return self
     }
     

@@ -46,6 +46,9 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     // MARK: Framework style.
     
+    /// Photo sorting method, the preview interface is not affected by this parameter. Defaults to true.
+    public var sortAscending = true
+    
     public var style: ZLPhotoBrowserStyle = .embedAlbumList
     
     public var statusBarStyle: UIStatusBarStyle = .lightContent
@@ -94,6 +97,45 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     /// The minimum spacing to use between lines of items in the grid for `ZLThumbnailViewController`.
     public var minimumLineSpacing: CGFloat = 2
+    
+    /// In thumb image interface, control whether to display the selection button animation when selecting. Defaults to false.
+    public var animateSelectBtnWhenSelectInThumbVC = false
+    
+    /// In preview interface, control whether to display the selection button animation when selecting. Defaults to true.
+    public var animateSelectBtnWhenSelectInPreviewVC = true
+    
+    /// Animation duration for select button. Defaults to 0.5.
+    public var selectBtnAnimationDuration: CFTimeInterval = 0.5
+    
+    /// Whether to display the serial number above the selected button. Defaults to false.
+    public var showIndexOnSelectBtn = false
+    
+    /// Whether to display scroll to bottom button. Defaults to false.
+    public var showScrollToBottomBtn = false
+    
+    /// Show the image captured by the camera is displayed on the camera button inside the album. Defaults to false.
+    public var showCaptureImageOnTakePhotoBtn = false
+    
+    /// In single selection mode, whether to display the selection button. Defaults to false.
+    public var showSelectBtnWhenSingleSelect = false
+    
+    /// Overlay a mask layer on top of the selected photos. Defaults to true.
+    public var showSelectedMask = true
+    
+    /// Display a border on the selected photos cell. Defaults to false.
+    public var showSelectedBorder = false
+    
+    /// Overlay a mask layer above the cells that cannot be selected. Defaults to true.
+    public var showInvalidMask = true
+    
+    /// Display the index of the selected photos. Defaults to true.
+    public var showSelectedIndex = true
+    
+    /// Display the selected photos at the bottom of the preview large photos interface. Defaults to true.
+    public var showSelectedPhotoPreview = true
+    
+    /// Timeout for image parsing. Defaults to 20.
+    public var timeout: TimeInterval = 20
     
     // MARK: Navigation and bottom tool bar
     
@@ -215,11 +257,11 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     /// A color for navigation bar.
     /// 相册列表及小图界面导航条背景色
-    public var navBarColor: UIColor = .zl.rgba(160, 160, 160, 0.65)
+    public var navBarColor: UIColor = .zl.rgba(140, 140, 140, 0.75)
     
     /// A color for navigation bar in preview interface.
     /// 预览大图界面的导航条背景色
-    public var navBarColorOfPreviewVC: UIColor = .zl.rgba(160, 160, 160, 0.65)
+    public var navBarColorOfPreviewVC: UIColor = .zl.rgba(50, 50, 50)
     
     /// A color for Navigation bar text.
     /// 相册列表及小图界面导航栏标题颜色
@@ -255,7 +297,7 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     /// A color for background in thumbnail interface.
     /// 相册小图界面背景色
-    public var thumbnailBgColor: UIColor = .zl.rgba(50, 50, 50)
+    public var thumbnailBgColor: UIColor = .zl.rgba(25, 25, 25)
     
     /// A color for background in preview interface..
     /// 预览大图界面背景色
@@ -351,7 +393,7 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     /// Mask layer color of selected cell.
     /// 已选择照片上方遮罩阴影颜色
-    public var selectedMaskColor: UIColor = .black.withAlphaComponent(0.4)
+    public var selectedMaskColor: UIColor = .black.withAlphaComponent(0.45)
     
     private var pri_selectedBorderColor: UIColor?
     /// Border color of selected cell.
@@ -371,14 +413,14 @@ public class ZLPhotoUIConfiguration: NSObject {
     
     /// The text color of selected cell index label.
     /// 已选照片右上角序号label背景色
-    public var indexLabelTextColor: UIColor = .white
+    public var indexLabelTextColor: UIColor = .zl.rgba(220, 220, 220)
     
     private var pri_indexLabelBgColor: UIColor?
     /// The background color of selected cell index label.
     /// 已选照片右上角序号label背景色
     public var indexLabelBgColor: UIColor {
         get {
-            pri_indexLabelBgColor ?? themeColor
+            pri_indexLabelBgColor ?? (showIndexOnSelectBtn ? themeColor : .clear)
         }
         set {
             pri_indexLabelBgColor = newValue

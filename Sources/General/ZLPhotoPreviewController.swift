@@ -61,9 +61,12 @@ public class ZLPhotoPreviewController: UIViewController {
     
     private var indexBeforOrientationChanged: Int
     
+    private let navViewAlpha = 0.95
+    
     private lazy var navView: UIView = {
         let view = UIView()
         view.backgroundColor = .zl.navBarColorOfPreviewVC
+        view.alpha = navViewAlpha
         return view
     }()
     
@@ -92,17 +95,17 @@ public class ZLPhotoPreviewController: UIViewController {
         return btn
     }()
     
-    private lazy var indexLabel: UILabel = {
-        let label = UILabel()
-        label.backgroundColor = .zl.indexLabelBgColor
-        label.font = .zl.font(ofSize: 14)
-        label.textColor = .white
-        label.textAlignment = .center
-        label.layer.cornerRadius = 25.0 / 2
-        label.layer.masksToBounds = true
-        label.isHidden = true
-        return label
-    }()
+//    private lazy var indexLabel: UILabel = {
+//        let label = UILabel()
+//        label.backgroundColor = .zl.indexLabelBgColor
+//        label.font = .zl.font(ofSize: 14)
+//        label.textColor = .white
+//        label.textAlignment = .center
+//        label.layer.cornerRadius = 25.0 / 2
+//        label.layer.masksToBounds = true
+//        label.isHidden = true
+//        return label
+//    }()
     
     private lazy var bottomView: UIView = {
         let view = UIView()
@@ -158,7 +161,7 @@ public class ZLPhotoPreviewController: UIViewController {
     /// 是否在点击确定时候，当未选择任何照片时候，自动选择当前index的照片
     var autoSelectCurrentIfNotSelectAnyone = true
     
-    /// 界面消失时，通知上个界面刷新（针对预览视图）
+    /// 界面消失时，通知上个界面刷新
     var backBlock: (() -> Void)?
     
     public override var prefersStatusBarHidden: Bool {
@@ -232,13 +235,13 @@ public class ZLPhotoPreviewController: UIViewController {
         
         if isRTL() {
             backBtn.frame = CGRect(x: view.zl.width - insets.right - 60, y: insets.top, width: 60, height: 44)
-            selectBtn.frame = CGRect(x: insets.left + 15, y: insets.top + (44 - 25) / 2, width: 25, height: 25)
+            selectBtn.frame = CGRect(x: insets.left + 15, y: insets.top + (44 - 24) / 2, width: 24, height: 24)
         } else {
             backBtn.frame = CGRect(x: insets.left, y: insets.top, width: 60, height: 44)
-            selectBtn.frame = CGRect(x: view.zl.width - 40 - insets.right, y: insets.top + (44 - 25) / 2, width: 25, height: 25)
+            selectBtn.frame = CGRect(x: view.zl.width - 40 - insets.right, y: insets.top + (44 - 24) / 2, width: 24, height: 24)
         }
         
-        indexLabel.frame = selectBtn.bounds
+//        indexLabel.frame = selectBtn.bounds
         
         refreshBottomViewFrame()
         
@@ -278,7 +281,7 @@ public class ZLPhotoPreviewController: UIViewController {
         var bottomViewH = ZLLayout.bottomToolViewH
         
         var showSelPhotoPreview = false
-        if ZLPhotoConfiguration.default().showSelectedPhotoPreview,
+        if ZLPhotoUIConfiguration.default().showSelectedPhotoPreview,
            let nav = navigationController as? ZLImageNavController,
            !nav.arrSelectedModels.isEmpty {
             showSelPhotoPreview = true
@@ -324,6 +327,7 @@ public class ZLPhotoPreviewController: UIViewController {
         automaticallyAdjustsScrollViewInsets = false
         
         let config = ZLPhotoConfiguration.default()
+        let uiConfig = ZLPhotoUIConfiguration.default()
         
         view.addSubview(navView)
         
@@ -334,7 +338,7 @@ public class ZLPhotoPreviewController: UIViewController {
         
         navView.addSubview(backBtn)
         navView.addSubview(selectBtn)
-        selectBtn.addSubview(indexLabel)
+//        selectBtn.addSubview(indexLabel)
         view.addSubview(collectionView)
         view.addSubview(bottomView)
         
@@ -343,7 +347,7 @@ public class ZLPhotoPreviewController: UIViewController {
             bottomView.addSubview(bottomBlurView!)
         }
         
-        if config.showSelectedPhotoPreview {
+        if uiConfig.showSelectedPhotoPreview {
             let selModels = (navigationController as? ZLImageNavController)?.arrSelectedModels ?? []
             selPhotoPreview = ZLPhotoPreviewSelectedView(selModels: selModels, currentShowModel: arrDataSources[currentIndex])
             selPhotoPreview?.selectBlock = { [weak self] model in
@@ -391,6 +395,7 @@ public class ZLPhotoPreviewController: UIViewController {
         popInteractiveTransition = ZLPhotoPreviewPopInteractiveTransition(viewController: self)
         popInteractiveTransition?.shouldStartTransition = { [weak self] point -> Bool in
             guard let `self` = self else { return false }
+            
             if !self.hideNavView, self.navView.frame.contains(point) || self.bottomView.frame.contains(point) {
                 return false
             }
@@ -404,8 +409,10 @@ public class ZLPhotoPreviewController: UIViewController {
         popInteractiveTransition?.startTransition = { [weak self] in
             guard let `self` = self else { return }
             
-            self.navView.alpha = 0
-            self.bottomView.alpha = 0
+            UIView.animate(withDuration: 0.25) {
+                self.navView.alpha = 0
+                self.bottomView.alpha = 0
+            }
             
             guard let cell = self.collectionView.cellForItem(at: IndexPath(row: self.currentIndex, section: 0)) else {
                 return
@@ -425,7 +432,7 @@ public class ZLPhotoPreviewController: UIViewController {
             self.navView.isHidden = false
             self.bottomView.isHidden = false
             UIView.animate(withDuration: 0.5) {
-                self.navView.alpha = 1
+                self.navView.alpha = self.navViewAlpha
                 self.bottomView.alpha = 1
             }
             
@@ -443,16 +450,19 @@ public class ZLPhotoPreviewController: UIViewController {
             zlLoggerInDebug("Navigation controller is null")
             return
         }
+        
         let config = ZLPhotoConfiguration.default()
+        let uiConfig = ZLPhotoUIConfiguration.default()
         let currentModel = arrDataSources[currentIndex]
         
-        if (!config.allowMixSelect && currentModel.type == .video) || (!config.showSelectBtnWhenSingleSelect && config.maxSelectCount == 1) {
+        if (!config.allowMixSelect && currentModel.type == .video) ||
+           (!uiConfig.showSelectBtnWhenSingleSelect && config.maxSelectCount == 1) {
             selectBtn.isHidden = true
         } else {
             selectBtn.isHidden = false
         }
         selectBtn.isSelected = arrDataSources[currentIndex].isSelected
-        resetIndexLabelStatus()
+//        resetIndexLabelStatus()
         
         guard showBottomViewAndSelectBtn else {
             selectBtn.isHidden = true
@@ -489,22 +499,22 @@ public class ZLPhotoPreviewController: UIViewController {
         }
     }
     
-    private func resetIndexLabelStatus() {
-        guard ZLPhotoConfiguration.default().showSelectedIndex else {
-            indexLabel.isHidden = true
-            return
-        }
-        guard let nav = navigationController as? ZLImageNavController else {
-            zlLoggerInDebug("Navigation controller is null")
-            return
-        }
-        if let index = nav.arrSelectedModels.firstIndex(where: { $0 == self.arrDataSources[self.currentIndex] }) {
-            indexLabel.isHidden = false
-            indexLabel.text = String(index + 1)
-        } else {
-            indexLabel.isHidden = true
-        }
-    }
+//    private func resetIndexLabelStatus() {
+//        guard ZLPhotoConfiguration.default().showSelectedIndex else {
+//            indexLabel.isHidden = true
+//            return
+//        }
+//        guard let nav = navigationController as? ZLImageNavController else {
+//            zlLoggerInDebug("Navigation controller is null")
+//            return
+//        }
+//        if let index = nav.arrSelectedModels.firstIndex(where: { $0 == self.arrDataSources[self.currentIndex] }) {
+//            indexLabel.isHidden = false
+//            indexLabel.text = String(index + 1)
+//        } else {
+//            indexLabel.isHidden = true
+//        }
+//    }
     
     // MARK: btn actions
     
@@ -540,7 +550,7 @@ public class ZLPhotoPreviewController: UIViewController {
             }
             
             downloadAssetIfNeed(model: currentModel, sender: self) { [weak self] in
-                if config.animateSelectBtnWhenSelect {
+                if ZLPhotoUIConfiguration.default().animateSelectBtnWhenSelectInPreviewVC {
                     self?.selectBtn.layer.add(ZLAnimationUtils.springAnimation(), forKey: nil)
                 }
                 
@@ -557,10 +567,12 @@ public class ZLPhotoPreviewController: UIViewController {
     
     @objc private func editBtnClick() {
         let config = ZLPhotoConfiguration.default()
+        let uiConfig = ZLPhotoUIConfiguration.default()
+        
         let model = arrDataSources[currentIndex]
         
         var requestAssetID: PHImageRequestID?
-        let hud = ZLProgressHUD(style: ZLPhotoUIConfiguration.default().hudStyle)
+        let hud = ZLProgressHUD(style: uiConfig.hudStyle)
         hud.timeoutBlock = { [weak self] in
             showAlertView(localLanguageTextValue(.timeout), self)
             if let requestAssetID = requestAssetID {
@@ -569,7 +581,7 @@ public class ZLPhotoPreviewController: UIViewController {
         }
         
         if model.type == .image || (!config.allowSelectGif && model.type == .gif) || (!config.allowSelectLivePhoto && model.type == .livePhoto) {
-            hud.show(timeout: ZLPhotoConfiguration.default().timeout)
+            hud.show(timeout: ZLPhotoUIConfiguration.default().timeout)
             requestAssetID = ZLPhotoManager.fetchImage(for: model.asset, size: model.previewSize) { [weak self] image, isDegraded in
                 if !isDegraded {
                     if let image = image {
@@ -581,7 +593,7 @@ public class ZLPhotoPreviewController: UIViewController {
                 }
             }
         } else if model.type == .video || config.allowEditVideo {
-            hud.show(timeout: ZLPhotoConfiguration.default().timeout)
+            hud.show(timeout: uiConfig.timeout)
             // fetch avasset
             requestAssetID = ZLPhotoManager.fetchAVAsset(forVideo: model.asset) { [weak self] avAsset, _ in
                 hud.hide()
@@ -598,13 +610,14 @@ public class ZLPhotoPreviewController: UIViewController {
         originalBtn.isSelected.toggle()
         
         let config = ZLPhotoConfiguration.default()
+        let uiConfig = ZLPhotoUIConfiguration.default()
         
         let nav = (navigationController as? ZLImageNavController)
         nav?.isSelectedOriginal = originalBtn.isSelected
         if nav?.arrSelectedModels.isEmpty == true {
             selectBtnClick()
         } else if config.maxSelectCount == 1,
-                  !config.showSelectBtnWhenSingleSelect,
+                  !uiConfig.showSelectBtnWhenSingleSelect,
                   !originalBtn.isSelected,
                   nav?.arrSelectedModels.count == 1,
                   let currentModel = nav?.arrSelectedModels.first {
@@ -614,7 +627,7 @@ public class ZLPhotoPreviewController: UIViewController {
             nav?.arrSelectedModels.removeAll { $0 == currentModel }
             selPhotoPreview?.removeSelModel(model: currentModel)
             resetSubViewStatus()
-            let index = config.sortAscending ? arrDataSources.lastIndex { $0 == currentModel } : arrDataSources.firstIndex { $0 == currentModel }
+            let index = uiConfig.sortAscending ? arrDataSources.lastIndex { $0 == currentModel } : arrDataSources.firstIndex { $0 == currentModel }
             if let index = index {
                 collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
             }
@@ -672,10 +685,10 @@ public class ZLPhotoPreviewController: UIViewController {
         let nav = navigationController as? ZLImageNavController
         nav?.arrSelectedModels.removeAll()
         nav?.arrSelectedModels.append(contentsOf: models)
-        guard ZLPhotoConfiguration.default().showSelectedIndex else {
+        guard ZLPhotoUIConfiguration.default().showSelectedIndex else {
             return
         }
-        resetIndexLabelStatus()
+//        resetIndexLabelStatus()
     }
     
     private func tapPreviewCell() {
