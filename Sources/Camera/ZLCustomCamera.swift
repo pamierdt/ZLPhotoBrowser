@@ -884,7 +884,7 @@ open class ZLCustomCamera: UIViewController {
         if videoInput?.device.position == .front, connection?.isVideoMirroringSupported == true {
             connection?.isVideoMirrored = true
         }
-        let setting = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecJPEG])
+        let setting = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
         if videoInput?.device.hasFlash == true, flashBtn.isSelected {
             setting.flashMode = .on
         } else {

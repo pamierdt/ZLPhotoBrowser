@@ -204,7 +204,7 @@ public class ZLThumbnailViewController: UIViewController {
     
     private var hiddenStatusBar = false
     
-    override var prefersStatusBarHidden: Bool { hiddenStatusBar }
+    public override var prefersStatusBarHidden: Bool { hiddenStatusBar }
     
     public override var preferredStatusBarStyle: UIStatusBarStyle {
         return ZLPhotoUIConfiguration.default().statusBarStyle
@@ -258,7 +258,7 @@ public class ZLThumbnailViewController: UIViewController {
         updateScrollToBottomVisibility()
     }
     
-    override func viewDidDisappear(_ animated: Bool) {
+    public override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         
         // 如果预览界面不显示状态栏，这里隐藏下状态栏，使下拉返回动画期间状态栏不至于闪烁
@@ -1407,7 +1407,7 @@ extension ZLThumbnailViewController: UICollectionViewDataSource, UICollectionVie
 // MARK: ScrollView Delegate
 
 extension ZLThumbnailViewController: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateScrollToBottomVisibility()
     }
 }

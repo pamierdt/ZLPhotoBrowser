@@ -107,8 +107,8 @@ public class ZLPhotoUIConfiguration: NSObject {
     /// Animation duration for select button. Defaults to 0.5.
     public var selectBtnAnimationDuration: CFTimeInterval = 0.5
     
-    /// Whether to display the serial number above the selected button. Defaults to false.
-    public var showIndexOnSelectBtn = false
+    /// Whether to display the serial number above the selected button. Defaults to true.
+    public var showIndexOnSelectBtn = true
     
     /// Whether to display scroll to bottom button. Defaults to false.
     public var showScrollToBottomBtn = false
