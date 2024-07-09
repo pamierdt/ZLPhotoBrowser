@@ -36,6 +36,8 @@ class ZLThumbnailPhotoCell: UICollectionViewCell {
     
     private lazy var videoTag = UIImageView(image: .zl.getImage("zl_video"))
     
+    private lazy var iCloudTag = UIImageView(image: .zl.getImage("zl_iCloud"))
+
     private lazy var livePhotoTag = UIImageView(image: .zl.getImage("zl_livePhoto"))
     
     private lazy var editImageTag = UIImageView(image: .zl.getImage("zl_editImage_tag"))
@@ -147,7 +149,7 @@ class ZLThumbnailPhotoCell: UICollectionViewCell {
         bottomShadowView.addSubview(editImageTag)
         bottomShadowView.addSubview(descLabel)
         containerView.addSubview(progressView)
-        
+        containerView.addSubview(iCloudTag)
         if ZLPhotoUIConfiguration.default().showSelectedBorder {
             layer.borderColor = UIColor.zl.selectedBorderColor.cgColor
         }
@@ -157,7 +159,7 @@ class ZLThumbnailPhotoCell: UICollectionViewCell {
         super.layoutSubviews()
         
         imageView.frame = bounds
-        
+        iCloudTag.frame = CGRect(origin: CGPointMake(5, 0), size: iCloudTag.bounds.size)
         containerView.frame = bounds
         coverView.frame = bounds
         btnSelect.frame = CGRect(x: bounds.width - 32, y: 8, width: selectBtnWH, height: selectBtnWH)
@@ -202,7 +204,7 @@ class ZLThumbnailPhotoCell: UICollectionViewCell {
             layer.cornerRadius = ZLPhotoUIConfiguration.default().cellCornerRadio
             layer.masksToBounds = true
         }
-        
+        iCloudTag.isHidden = !model.asset.zl.isInCloud
         if model.type == .video {
             bottomShadowView.isHidden = false
             videoTag.isHidden = false

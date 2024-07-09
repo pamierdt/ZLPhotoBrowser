@@ -168,6 +168,9 @@ public class ZLPhotoConfiguration: NSObject {
     /// If true, you can slide select photos in album. Defaults to true.
     public var allowSlideSelect = true
     
+    /// If true, you can  select photos in iCoud. Defaults to true.
+    public var allowInCloud = true
+    
     /// When slide select is active, will auto scroll to top or bottom when your finger at the top or bottom. Defaults to true.
     public var autoScrollWhenSlideSelectIsActive = true
     

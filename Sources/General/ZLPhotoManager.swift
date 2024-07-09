@@ -434,6 +434,11 @@ public class ZLPhotoManager: NSObject {
     public class func fetchAssetFilePath(for asset: PHAsset, completion: @escaping (String?) -> Void) {
         asset.requestContentEditingInput(with: nil) { input, _ in
             var path = input?.fullSizeImageURL?.absoluteString
+            if input?.mediaType == .video {
+                if let p = (input?.audiovisualAsset as? AVURLAsset)?.url.path {
+                    path = "file://\(p)"
+                }
+            }
             if path == nil,
                let dir = asset.value(forKey: "directory") as? String,
                let name = asset.zl.filename {
