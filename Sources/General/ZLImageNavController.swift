@@ -67,5 +67,4 @@ public class ZLImageNavController: UINavigationController {
 
         // Do any additional setup after loading the view.
     }
-    
 }

@@ -27,6 +27,10 @@ class ViewController: UIViewController {
         
         setupUI()
         
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+//            FLEXManager.shared.showExplorer()
+//        }
+        
         ZLPhotoUIConfiguration.default()
             .customAlertClass(CustomAlertController.self)
     }
@@ -164,7 +168,7 @@ class ViewController: UIViewController {
             .minimumLineSpacing(minLineSpacing)
             .columnCountBlock { Int(ceil($0 / (428.0 / 4))) }
             .showScrollToBottomBtn(true)
-        
+            
         if ZLPhotoUIConfiguration.default().languageType == .arabic {
             UIView.appearance().semanticContentAttribute = .forceRightToLeft
         } else {
@@ -177,7 +181,7 @@ class ViewController: UIViewController {
             .imageStickerContainerView(ImageStickerContainerView())
 //            .tools([.draw, .clip, .mosaic, .filter])
 //            .adjustTools([.brightness, .contrast, .saturation])
-//            .clipRatios([.custom, .circle, .wh1x1, .wh3x4, .wh16x9, ZLImageClipRatio(title: "2 : 1", whRatio: 2 / 1)])
+            .clipRatios(ZLImageClipRatio.all)
 //            .imageStickerContainerView(ImageStickerContainerView())
 //            .filters([.normal, .process, ZLFilter(name: "custom", applier: ZLCustomFilter.hazeRemovalFilter)])
         

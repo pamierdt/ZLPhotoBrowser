@@ -44,7 +44,7 @@ public enum ZLLayout {
 }
 
 public func markSelected(source: inout [ZLPhotoModel], selected: inout [ZLPhotoModel]) {
-    guard selected.count > 0 else {
+    guard !selected.isEmpty else {
         return
     }
     
@@ -103,8 +103,8 @@ public func deviceSafeAreaInsets() -> UIEdgeInsets {
     return insets
 }
 
-public func deviceIsFringeScreen() -> Bool {
-    return deviceSafeAreaInsets().top > 0
+func deviceIsFringeScreen() -> Bool {
+    return deviceSafeAreaInsets().top > 20
 }
 
 public func isSmallScreen() -> Bool {
@@ -161,7 +161,7 @@ public func canAddModel(_ model: ZLPhotoModel, currentSelectCount: Int, sender: 
     
     if currentSelectCount > 0,
        !config.allowMixSelect,
-       model.type == .video{
+       model.type == .video {
         return false
     }
     
@@ -185,7 +185,7 @@ public func canAddModel(_ model: ZLPhotoModel, currentSelectCount: Int, sender: 
         return false
     }
     
-    guard (config.minSelectVideoDataSize > 0 || config.maxSelectVideoDataSize != .greatestFiniteMagnitude),
+    guard config.minSelectVideoDataSize > 0 || config.maxSelectVideoDataSize != .greatestFiniteMagnitude,
           let size = model.dataSize else {
         return true
     }
@@ -250,7 +250,7 @@ public func videoIsMeetRequirements(model: ZLPhotoModel) -> Bool {
         return false
     }
     
-    if (config.minSelectVideoDataSize > 0 || config.maxSelectVideoDataSize != .greatestFiniteMagnitude),
+    if config.minSelectVideoDataSize > 0 || config.maxSelectVideoDataSize != .greatestFiniteMagnitude,
        let dataSize = model.dataSize,
        !(config.minSelectVideoDataSize...config.maxSelectVideoDataSize ~= dataSize) {
         return false
@@ -275,8 +275,8 @@ public func ZLMainAsync(after: TimeInterval = 0, handler: @escaping (() -> Void)
     }
 }
 
-public func zl_debugPrint(_ message: Any...) {
-    message.forEach { debugPrint($0) }
+func zl_debugPrint(_ message: Any...) {
+//    message.forEach { debugPrint($0) }
 }
 
 public func zlLoggerInDebug(_ lastMessage: @autoclosure () -> String, file: StaticString = #file, line: UInt = #line) {

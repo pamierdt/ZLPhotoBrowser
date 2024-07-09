@@ -475,11 +475,13 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     
     private var player: AVPlayer?
     
-    private var playerLayer: AVPlayerLayer?
+    var playerView = UIView()
+    
+    var playerLayer: AVPlayerLayer?
     
     private lazy var progressView = ZLProgressView()
     
-    private lazy var imageView: UIImageView = {
+    lazy var imageView: UIImageView = {
         let view = UIImageView()
         view.clipsToBounds = true
         view.contentMode = .scaleAspectFill
@@ -491,6 +493,12 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
         btn.setImage(.zl.getImage("zl_playVideo"), for: .normal)
         btn.addTarget(self, action: #selector(playBtnClick), for: .touchUpInside)
         return btn
+    }()
+    
+    lazy var singleTapGes: UITapGestureRecognizer = {
+        let ges = UITapGestureRecognizer()
+        ges.addTarget(self, action: #selector(playBtnClick))
+        return ges
     }()
     
     private lazy var syncErrorLabel: UILabel = {
@@ -538,6 +546,7 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     
     deinit {
         cancelDownloadVideo()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         zl_debugPrint("ZLVideoPreviewCell deinit")
     }
     
@@ -554,10 +563,12 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        playerLayer?.frame = bounds
         resizeImageView(imageView: imageView, asset: model.asset)
+        playerView.frame = imageView.frame
+        playerLayer?.frame = playerView.bounds
         let insets = deviceSafeAreaInsets()
-        playBtn.frame = CGRect(x: 0, y: insets.top, width: bounds.width, height: bounds.height - insets.top - insets.bottom)
+        playBtn.frame = CGRect(origin: .zero, size: CGSize(width: 50, height: 50))
+        playBtn.center = CGPoint(x: bounds.midX, y: bounds.midY)
         syncErrorLabel.frame = CGRect(x: 10, y: insets.top + 60, width: bounds.width - 20, height: 35)
         progressView.frame = CGRect(x: bounds.width / 2 - 30, y: bounds.height / 2 - 30, width: 60, height: 60)
     }
@@ -574,7 +585,6 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     
     override func didEndDisplaying() {
         imageView.isHidden = false
-        player?.currentItem?.seek(to: CMTimeMake(value: 0, timescale: 1))
         NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
 
         cancelDownloadVideo()
@@ -585,10 +595,12 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     }
     
     private func setupUI() {
+        contentView.addSubview(playerView)
         contentView.addSubview(imageView)
         contentView.addSubview(syncErrorLabel)
         contentView.addSubview(progressView)
         contentView.addSubview(playBtn)
+        contentView.addGestureRecognizer(singleTapGes)
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
     }
@@ -650,14 +662,17 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
         playBtn.setImage(.zl.getImage("zl_playVideo"), for: .normal)
         playBtn.isEnabled = true
         
+        NotificationCenter.default.removeObserver(self, name: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
+        
         player = AVPlayer(playerItem: item)
         if playerLayer?.superlayer != nil {
             playerLayer?.removeFromSuperlayer()
             playerLayer = nil
         }
         playerLayer = AVPlayerLayer(player: player)
-        playerLayer?.frame = bounds
-        layer.insertSublayer(playerLayer!, at: 0)
+        playerLayer?.frame = playerView.bounds
+        playerView.layer.insertSublayer(playerLayer!, at: 0)
+        
         NotificationCenter.default.addObserver(self, selector: #selector(playFinish), name: .AVPlayerItemDidPlayToEndTime, object: player?.currentItem)
     }
     
@@ -669,6 +684,8 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
                 player?.currentItem?.seek(to: CMTimeMake(value: 0, timescale: 1))
             }
             imageView.isHidden = true
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+            try? AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
             player?.play()
             playBtn.setImage(nil, for: .normal)
             singleTapBlock?()
@@ -689,25 +706,18 @@ class ZLVideoPreviewCell: ZLPreviewBaseCell {
     
     private func pausePlayer(seekToZero: Bool) {
         player?.pause()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         if seekToZero {
             player?.seek(to: .zero)
         }
+        
         playBtn.setImage(.zl.getImage("zl_playVideo"), for: .normal)
         singleTapBlock?()
-        
-        operationQueue.async {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
     }
     
     private func cancelDownloadVideo() {
         PHImageManager.default().cancelImageRequest(videoRequestID)
         videoRequestID = PHInvalidImageRequestID
-    }
-    
-    func pauseWhileTransition() {
-        player?.pause()
-        playBtn.setImage(.zl.getImage("zl_playVideo"), for: .normal)
     }
 }
 
@@ -725,6 +735,12 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
         return btn
     }()
     
+    private lazy var singleTapGes: UITapGestureRecognizer = {
+        let ges = UITapGestureRecognizer()
+        ges.addTarget(self, action: #selector(playBtnClick))
+        return ges
+    }()
+    
     var isPlaying: Bool {
         if player != nil, player?.rate != 0 {
             return true
@@ -732,9 +748,8 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
         return false
     }
     
-    private let operationQueue = DispatchQueue(label: "com.ZLPhotoBrowser.ZLNetVideoPreviewCell")
-    
     deinit {
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         zl_debugPrint("ZLNetVideoPreviewCell deinit")
     }
     
@@ -750,9 +765,10 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        
         playerLayer?.frame = bounds
-        let insets = deviceSafeAreaInsets()
-        playBtn.frame = CGRect(x: 0, y: insets.top, width: bounds.width, height: bounds.height - insets.top - insets.bottom)
+        playBtn.frame = CGRect(origin: .zero, size: CGSize(width: 50, height: 50))
+        playBtn.center = CGPoint(x: bounds.midX, y: bounds.midY)
     }
     
     override func didEndDisplaying() {
@@ -761,6 +777,7 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
     
     private func setupUI() {
         contentView.addSubview(playBtn)
+        contentView.addGestureRecognizer(singleTapGes)
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
     }
@@ -773,6 +790,8 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
                 player?.currentItem?.seek(to: CMTimeMake(value: 0, timescale: 1))
             }
             player?.play()
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+            try? AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
             playBtn.setImage(nil, for: .normal)
             singleTapBlock?()
         } else {
@@ -798,15 +817,13 @@ class ZLNetVideoPreviewCell: ZLPreviewBaseCell {
     
     private func pausePlayer(seekToZero: Bool) {
         player?.pause()
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         if seekToZero {
             player?.seek(to: .zero)
         }
+        
         playBtn.setImage(.zl.getImage("zl_playVideo"), for: .normal)
         singleTapBlock?()
-        
-        operationQueue.async {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        }
     }
     
     func configureCell(videoUrl: URL, httpHeader: [String: Any]?) {
